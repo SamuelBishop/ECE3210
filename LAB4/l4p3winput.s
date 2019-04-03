@@ -14,6 +14,13 @@
 	swi 0
 .endm
 
+.macro INC_COUNT charscount
+	ldr r5, =\charscount //address of count
+	ldrb r8, [r5] //value of count
+	add r8, r8, #1 //incrementing by 1
+	str r8, [r5] //getting the value
+.endm
+
 .data
 message1: .ascii "Please enter a string: "
 message2: .ascii "You entered: "
@@ -22,17 +29,20 @@ message4: .ascii " numbers in this string.\n"
 message5: .ascii " capital letters in this string.\n"
 message6: .ascii " lower case letters in this string.\n"
 message7: .ascii " other characters in this string.\n"
+message8: .ascii " total characters in this string.\n"
 prompt:    	.space 40	@ Declare string buffer with empty space
-numbers: .space 1
-cletters: .space 1
-lletters: .space 1
-others: .space 1
+COUNT_DIGIT: .byte 0
+COUNT_CAP: .byte 0
+COUNT_SMALL: .byte 0
+COUNT_OTHER: .byte 0
+COUNT_TOTALCHARS: .byte 0
 
 .text
 .global main
 
 main:
 	//Initializing counters
+	mov r8, #0 //COUNT register
 	mov r9, #0 //NUM counter
 	mov r10, #0 //CAP counter
 	mov r11, #0 //LOWER counter
@@ -75,51 +85,60 @@ main:
 	
 	//All Labels
 	addNum: add r9, r9, #1
+			INC_COUNT COUNT_TOTALCHARS
 			b end1
 	addCap: add r10, r10, #1
+			INC_COUNT COUNT_TOTALCHARS
 			b end1
 	addLow: add r11, r11, #1
+			INC_COUNT COUNT_TOTALCHARS
 			b end1
 	addOth: add r12, r12, #1
+			INC_COUNT COUNT_TOTALCHARS
 			b end1
 	end1: b loop
 	end2: 
 	
-		  ldr r1, =numbers
+		  ldr r1, =COUNT_DIGIT
 		  add r9, r9, #48
 		  str r9, [r1]
 	
-		  ldr r2, =cletters
+		  ldr r2, =COUNT_CAP
 		  add r10, r10, #48
 		  str r10, [r2]
 	
-		  ldr r3, =lletters
+		  ldr r3, =COUNT_SMALL
 		  add r11, r11, #48
 		  str r11, [r3]
 	
-		  ldr r4, =others
+		  ldr r4, =COUNT_OTHER
 		  add r12, r12, #47
 		  str r12, [r4]
 	
 		  //Tells the nums
 		  output message3, 10
-		  output numbers, 1
+		  output COUNT_DIGIT, 1
 		  output message4, 25
 		  
 		  //Tells the capital
 		  output message3, 10
-		  output cletters, 1
+		  output COUNT_CAP, 1
 		  output message5, 33
 		  
 		  //Tells the lower
 		  output message3, 10
-		  output lletters, 1
+		  output COUNT_SMALL, 1
 		  output message6, 36
 		  
 		  //Tells the other
 		  output message3, 10
-		  output others, 1
+		  output COUNT_OTHER, 1
 		  output message7, 34
+		  
+		  //Tells the total characters
+		  output message3, 10
+		  output COUNT_TOTALCHARS, 1
+		  output message8, 34
 		  
 		  mov r7, #1 //exits program
 		  swi 0

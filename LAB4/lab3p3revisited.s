@@ -20,4 +20,5 @@ main:
 		BLE loop
 		 
         @ exit syscall
+        mov r7, #1
         swi 0 
