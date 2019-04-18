@@ -113,14 +113,14 @@ main:
 		ldr r10, =operator
 		ldr r11, =operand2_A
 
-		output message1, 33
-		ldr r1, =test
-		//input input, 20
+		output message1, 33 //Ouputs the prompt
+		//ldr r1, =test //This is the test variable for ddd
+		input input, 20
 		
 		//Loading each char of the input into r3
 		loop: ldrb r3, [r1], #1 //post index update
 		
-		//Throwing error after Op is gotten
+		//Throwing error after Op2 is gotten
 		//cmp r8, #1
 		//beq throwError
 		
@@ -152,6 +152,7 @@ main:
 		cmp r3, #0x30
 		blt throwError
 		cmp r3, #0x39 //making sure is number
+		bgt throwError
 		cmple r5, #1
 		blt isNumOp1
 		beq isNumOp2
