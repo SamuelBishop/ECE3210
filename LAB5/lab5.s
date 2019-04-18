@@ -1,4 +1,4 @@
-////////// INPUT AND OUTPUT //////////
+////////// MACROS //////////
 .macro output meg,len
 	mov r7, #4	@ System number, #4 for 'write'
 	mov r0, #1	@ Specify output is monitor
@@ -14,6 +14,12 @@
 	ldr r1, =\string	@ started storing from the address specified in R1
 	swi 0
 .endm
+
+.macro negative reg1
+	mov r1, reg1
+	mvn r2, r1 //Take inverse
+	add r2, r2, #1 //Performing the twos comp //negative number is now held in r2
+.endm
 //////////////////////////////////////
 
 .data
@@ -27,7 +33,7 @@ newline: .ascii "\n"
 
 error:		.ascii	"Error!!\nInput format: Operand1 Operator Operand2\nOperand: decimal numbers\nOperators: _ - * / %\n"
 
-test: .ascii "255 / 9 + 1\n"
+test: .ascii "15 + 3\n"
 
 //other variables
 operand1_A:	.space 2
@@ -55,7 +61,7 @@ hex_to_ascii: //Makes up to 2 digit hex number into up to three digit ascii
         mov     r1, r8      @ dividend
         mov     r2, #10     @ divisor
         mov     r5, #0      @ counter
-
+        
         @ Start conversion with dividing by 10
 next_digit:
 		udiv	r3, r1, r2
@@ -108,8 +114,8 @@ main:
 		ldr r11, =operand2_A
 
 		output message1, 33
-		//ldr r1, =test
-		input input, 20
+		ldr r1, =test
+		//input input, 20
 		
 		//Loading each char of the input into r3
 		loop: ldrb r3, [r1], #1 //post index update
@@ -158,28 +164,29 @@ main:
 			mov r5, #1 //Setting the flag that will say that Operator1_A has already been retrieved
 			str r3, [r9]
 			sub r8, r3, #0x30 //Keeping the tens digit in the first register
+			mov r12, r8 //Putting 1s place into a register
 			ldrb r3, [r1], #1
 			cmp r3, #0x20 //Checking if the next char is a space if so r8 = Operator1_A
 			beq loop
 			mul r8, r4, r8 //If not then: multiplying r8 by 10
 			str r3, [r9, #1] //storing the second because it has been determine to be two numbers
 			sub r3, r3, #0x30
-			add r6, r8, r3 //adding the next number
+			add r12, r8, r3 //adding the next number
 			b loop //Loops and stores until any length of digits can be entered followed by a space
 			
 		isNumOp2:
-			str r3, [r11] //storing the first value
+			str r3, [r11] //storing the first ascii value
 			sub r8, r3, #0x30 //Keeping the tens digit in the first register
-			@str r8, [r11] //storing the first value
-			ldrb r3, [r1], #1
-			cmp r3, #0x0a
+			mov r5, r8 //Putting ones place into a register
+			ldrb r3, [r1], #1 //Loading the next
+			cmp r3, #0x0a //Catching null term
 			beq end
 			cmp r3, #0x20 //Checking if the next char is a space if so r8 = Operator1_A
 			beq loop
 			mul r8, r4, r8 //multiplying r8 by 10
 			str r3, [r11, #1] //Storing the second digit
 			sub r3, r3, #0x30
-			add r7, r8, r3 //r8 has the total number
+			add r5, r8, r3 //r8 has the total number
 			b loop //Loops and stores until any length of digits can be entered followed by a space
 			
 		throwError:
