@@ -39,8 +39,9 @@ test: .ascii "15 + 3\n"
 operand1_A:	.space 2
 operator:	.space 1
 operand2_A: .space 2
-operand1_H: .byte 0
-operand2_H: .byte 0
+operand1_H: .ascii "123\n"
+operand2_H: .byte 1
+result_H: .word 0
 result: 	.space 3
 input:    	.space 20	@ Declare string buffer with empty space
 
@@ -48,6 +49,30 @@ input:    	.space 20	@ Declare string buffer with empty space
 .global main
 
 //////////// GIVEN FUNCTIONS //////////
+// ===== ASCII to DEC conversion =====
+// r1 - address of a hex value variable
+// r0 - addrees of a ASCII value variable
+// r2 - sum variable
+// r10 - 10 for multiplication purposes
+
+ascii_to_hex:
+		push    {r1, r2, r3, r5, r6, r7, r8, r9, lr} 	@ Keep old registers on the stack pointer
+		ldr r0, =operand1_H								@ the ascii value location
+		ldr r1, =operand2_H								@ the hex value location
+		mov r10, #10									@ holding as 10 so I can multiply later
+		
+loopx:
+		ldrb r3, [r0], #1 		@ loads the byte of the ascii value
+		cmp r3, #0x0a 			@ comparing with the new line
+		beq forceEnd
+		sub r4, r3, #0x30		@ getting the decimal value of the ascii character
+		mul r2, r10, r2			@ sum = sum * 10
+		add r2, r2, r4			@ sum = sum * 10 + X
+		str r2, [r1]
+		b loopx
+
+
+
 // ===== HEX to ASCII conversion ===== 
 // r0 - address of a hex value variable
 // r1 - addrees of a ASCII value variable
@@ -99,6 +124,10 @@ Subroutine1:@ Subroutines name
 //////////////////////////////////////
 
 main:
+		//for ascii to hex demo
+		//mov r7, #0
+		//b ascii_to_hex
+		
 		//Initializing registers to use later
 		mov r0, #0 //if op2 gotten
 		mov r8, #0 //if op2 was neg
@@ -107,6 +136,7 @@ main:
 		mov r6, #0 //This will hold the final op1 value
 		mov r7, #0 //This will hold the final op2 value
 		mov r12, #0 //If operator taken
+		
 		
 		//Loaded registers
 		ldr r9, =operand1_A
