@@ -48,8 +48,8 @@ input:    	.space 20	@ Declare string buffer with empty space
 .text
 .global main
 
-//////////// GIVEN FUNCTIONS //////////
-// ===== ASCII to DEC conversion =====
+//////////// CONVERSION FUNCTIONS //////////
+// ===== ASCII to HEX conversion =====
 // r1 - address of a hex value variable
 // r0 - addrees of a ASCII value variable
 // r2 - sum variable
