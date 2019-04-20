@@ -1,6 +1,5 @@
 ////////// MACROS //////////
 .macro display meg,len
-
 	mov r7, #4				@ System number, #4 for 'write'
 	mov r0, #1				@ Specify output is monitor
 	ldrb r2, =\len			@ String is len characters long
@@ -25,6 +24,19 @@
 ////////////////////////////////
 
 .data
+	//STATIC VARIABLES
+	message1: .ascii "Enter an algebraic command line: "
+	message2: .ascii "Operand 1: " 
+	message3: .ascii "\nOperand 2: " 
+	message4: .ascii "\nOperator:  " 
+	message5: .ascii "\nResult:    "  
+
+	errorFormat: .ascii "Error!!\nInput format: Operand1 Operator Operand2\nOperand: decimal numbers\nOperators: - * / %" 
+	errorRange: .ascii "Error!! Enter operand values between -128 and 127\n"  
+	newLine: .ascii "\n" 
+	negative: .ascii "-"
+	
+	//DYNAMIC VARIABLES
 	flag1: .byte 0
 	flag2: .byte 0 
 	flag3: .byte 0
@@ -41,50 +53,31 @@
 	result_H: .word 0 
 	neg_result: .byte 0 
 	
-	message1: .ascii "Enter an algebraic command line: "
-	message2: .ascii "Operand 1: " 
-	message3: .ascii "\nOperand 2: " 
-	message4: .ascii "\nOperator: " 
-	message5: .ascii "\nResult: "  
-
-	errorFormat: .ascii "Error!!\nInput format: Operand1 Operator Operand2\nOperand: decimal numbers\nOperators: - * / %" 
-	errorRange: .ascii "Error!! Enter operand values between -128 and 127\n"  
-	newLine: .ascii "\n" 
-	negative: .ascii "-" 
-	
 .text
 .global main
 //////////// CONVERSION FUNCTIONS //////////
 // ===== ASCII to HEX conversion ===== // 
-// r1 - address of an op#A
-// r2 - addrees of an operand#_H
+// r1 - address of an operand1_A
+// r2 - address of an operand1_H
 
 A_to_H:
     push    {r4, lr} 
-    mov r8, #0
+    mov r8, #0				@ Will hold the 10^x place
+    mov r5, #10
 			
-loop:                            @ a loop to go though all the numbers in each operand and convert them into hexadecimal  
-	ldrb r0, [r1], #1            @r0 = actual content in ascii     
-	cmp r0, #0    
+loop:                		  
+	ldrb r0, [r1], #1       @ r0 index holds an ascii character value     
+	cmp r0, #0    			@ Checking if the character value is null
 	BEQ finished 
 			
-    sub r0, r0, #0x30 				@subtracting 30 from ascii value to get hex value
-    mov r5, #10 
-    mov r4, r8 
-    mul r8, r4, r5
-    add r8, r8, r0 
+    sub r0, r0, #0x30 		@ Subtracting from the ascii character to get the decimal value of the index
+    mov r4, r8 				@ Tells the immediate power of the number
+    mul r8, r4, r5			@ Multiplies to the correct 10^x power
+    add r8, r8, r0 			@ Adds all the numbers up to get the final result
     b loop
- 
-case_neg:
-	ldrb r3, [r3] 					@ r3 = flag value
-    cmp r3, #1          
-    BNE finished 
-    
-    mvn r8, r8 
-    add r8, r8, #1 
     
 finished:
-	strb r8, [r2]				@ Store the result into operand#_H
+	strb r8, [r2]			@ Store the result into operand1_H
     pop {r4, lr}
     bx  lr
         
@@ -133,8 +126,7 @@ store_asci:
 
 
 main:
-		display  message1, 33 
-
+		display  message1, 33 	@ Displaying input prompt and obtaining user input
         input input, 20  
 
         ldr r0, =input
@@ -142,12 +134,12 @@ main:
         ldr r2, =operand2_A 
         ldr r3, =operator 
 		
-num1:    @loop for 1st number  
+operand1:  
 	
     ldrb r4, [r0]    	@ loads the string into r4 
     add r0, r0, #1    	@ points at the next number 
     cmp r4, #'-'    	@ check to see if the first number is negative
-    BEQ    sflag1 		@ if num1 is negative, set flag to 1 
+    BEQ    sflag1 		@ if op1 is negative, set flag to 1 
  
     cmp r4, #0x20    	@ Checks to see if there's a space 
     BEQ    loopop 
@@ -160,7 +152,7 @@ num1:    @loop for 1st number
     
     strb r4, [r1]    	@ stores the address of 1st number (r1)
     add r1, r1, #1 
-    B num1 
+    B operand1 
 
 loopop:    @loop to figure out what the operator is  
 
@@ -192,7 +184,7 @@ store_op:    @stores the operator into operator
     
  
 
-num2:     @Loop for operand 2 
+operand2:     @Loop for operand 2 
 
     ldrb r4, [r0]    @loads the next number into register r4 
     add r0, r0, #1
@@ -210,7 +202,7 @@ num2:     @Loop for operand 2
 
     strb r4, [r2]    @stores address of 2nd number into register r2 
     add r2, r2, #1 
-    B num2
+    B operand2
 
 convert:        @loop to convert ascii to hex 
 
@@ -236,10 +228,10 @@ op:
 	
 	ldr r2, =flag1 
     ldrb r8, [r2] 
-    cmp r8,    #1    @checks if num1 is a negative number
+    cmp r8,    #1    @checks if op1 is a negative number
     bne sec
     
-    mvn r10,r10		 @if num1 is negative make 2's compliment
+    mvn r10,r10		 @if op1 is negative make 2's compliment
     add r10, r10,#1
     
       
@@ -247,11 +239,11 @@ sec:
   
 	ldr r6, =flag2
 	ldrb r8, [r6] 
-	cmp r8,    #1  @checks if num2 is a negative number
+	cmp r8,    #1  @checks if op2 is a negative number
     
     bne contop
     
-    mvn r9,r9		@if num1 is negative make 2's compliment
+    mvn r9,r9		@if op1 is negative make 2's compliment
     add r9, r9, #1
     
     //--------------//
@@ -383,12 +375,12 @@ errorcheck:
 sflag1: 
   
     setflag    flag1        @if the 1st number is negative set flag to 1
-    b num1 
+    b operand1 
        
 sflag2: 
     
     setflag    flag2        @if 2nd number is negative set flag to 1
-    b num2 
+    b operand2 
     
  
 error_exit: 
@@ -418,7 +410,7 @@ print_1:
 
 disOperator: 
 
-        display message4, 11 
+        display message4, 12 
         display operator, 1            @prints out their operator 
         b neg2_check 
 
@@ -443,7 +435,7 @@ print_2:
    
 displays:                        @prints out the calculated result 
 
-        display message5, 9 
+        display message5, 12 
         
         ldr r10, =flag3
         ldrb r10, [r10]
