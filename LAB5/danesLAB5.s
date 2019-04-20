@@ -228,102 +228,89 @@ logicOp2:
 arithmetic:    
 	ldr r3, =operator      	@ Loads address of operator  
     ldrb r3, [r3]        	@ Loads value of operator into operator
-    cmp r3, #0x2B        	@ Checks for +   
+    cmp r3, #'+'        	@ Checks for +   
     beq add 
    
-    cmp r3, #0x2D        	@ Checks for - 
+    cmp r3, #'-'        	@ Checks for - 
     beq subtract 
 
-    cmp r3, #0x2A        	@ Checks for *
+    cmp r3, #'*'        	@ Checks for *
     beq multiply 
 
-    cmp r3, #0x2F        	@ Checks for /
+    cmp r3, #'/'        	@ Checks for /
     beq divide
 
 add: 
-
     add r12, r10, r9    
-    
-    cmp r12, #0
-    bgt add2
-    setflag    flag3        @result is negative set flag to 1
-    mvn r12,r12				@make result 2's compliment
+    cmp r12, #0				@ Checks if answer is negative if not -> store results
+    bgt add2				
+    setflag flag3        	@ If the result is negative set neg flag to 1
+    mvn r12,r12				@ 2's comp
     add r12, r12, #1
     
 add2:    
-         
-    ldr r0, =result_H 
+    ldr r0, =result_H 		@ Putting the hex calculations back into ascii form again
     strb r12, [r0] 
     ldr r1, =result_A 
     bl H_to_A 
     
-    b calc
+    b copys
 
 subtract: 
-	
-    subs r12, r10, r9 
-    
+    subs r12, r10, r9 		@ Same concept as addition
     cmp r12, #0
     bgt subtract2
-    setflag    flag3        @result is negative set flag to 1
-    mvn r12,r12				@make result 2's compliment
+    setflag flag3
+    mvn r12,r12
     add r12, r12, #1 
     
 subtract2:
-       
     ldr r0, =result_H 
     strb r12, [r0] 
     ldr r1, =result_A 
     bl H_to_A
 	
-	b calc
+	b copys
   
-multiply: 
- 
+multiply: 					@ Same concept as addition
     mul r12, r10, r9  
-    
     cmp r12, #0
     bgt multiply2
-    setflag    flag3        @result is negative set flag to 1
-    mvn r12,r12				@make result 2's compliment
+    setflag flag3
+    mvn r12,r12
     add r12, r12, #1
     
 multiply2:
-       
     ldr r0, =result_H 
     str r12, [r0] 
     ldr r1, =result_A 
     bl H_to_A
 
-    b calc
+    b copys
   
-divide: 
-
+divide: 					@ Same concept as additon (only keeps the remainder)
     sdiv r12, r10, r9 
-    
     cmp r12, #0
     bgt divide2
-    setflag    flag3        @result is negative set flag to 1
-    mvn r12,r12				@make result 2's compliment
+    setflag flag3
+    mvn r12,r12
     add r12, r12, #1
     
 divide2: 
-        
     ldr r0, =result_H 
     strb r12, [r0] 
     ldr r1, =result_A
     bl H_to_A
      
-calc: 
+copys: 						@ Makes a negative copy of the result
+    ldr r0, =neg_result
+    mvn r1, r1				@ Making result (store in r1) negative with twos complement
+    add r1, r1, #1
+    strb r1, [r0]
+    ldr r0, =neg_result		@ Now we have both the negative and positive results 
+    ldr r1, =result_A
 
-    ldr r0, =neg_result     
-    mvn r1, r1 
-    add r1, r1, #1 
-    strb r1, [r0]      
-    ldr r0, =neg_result 
-    ldr r1, =result_A          
-
-    add r3, r3, #1 
+    add r3, r3, #1 			@ Adding 1 to r3
     b neg1_check     
 
    
@@ -370,7 +357,7 @@ neg1_check:
     display message2, 11     
     ldr r2, =flag1 
     ldrb r8, [r2] 
-    cmp r8,    #1 
+    cmp r8, #1 
     beq neg1_print 
 
     b print_1 
