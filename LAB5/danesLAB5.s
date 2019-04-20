@@ -31,7 +31,7 @@
 	message4: .ascii "\nOperator:  " 
 	message5: .ascii "\nResult:    "  
 
-	errorFormat: .ascii "Error!!\nInput format: Operand1 Operator Operand2\nOperand: decimal numbers\nOperators: - * / %" 
+	errorFormat: .ascii "Error!!\nInput format: Operand1 Operator Operand2\nOperand: decimal numbers\nOperators: - * / %\n" 
 	errorRange: .ascii "Error!! Enter operand values between -128 and 127\n"  
 	newLine: .ascii "\n" 
 	negative: .ascii "-"
@@ -126,15 +126,15 @@ store_asci:
 
 
 main:
-		display message1, 33 	@ Displaying input prompt and obtaining user input
-        input input, 20  
+	display message1, 33 	@ Displaying input prompt and obtaining user input
+    input input, 20  
 
-        ldr r0, =input			@ Loading variable addresses
-        ldr r1, =operand1_A
-        ldr r2, =operand2_A 
-        ldr r3, =operator 
+    ldr r0, =input			@ Loading variable addresses
+    ldr r1, =operand1_A
+    ldr r2, =operand2_A 
+    ldr r3, =operator 
 		
-operand1:  				@ Gets the operator1_A
+operand1:  				@ Gets the operand1_A
     ldrb r4, [r0]    	@ Loads the first char of string into r4 
     add r0, r0, #1    	@ Changes pointer by 1
     cmp r4, #'-'    	@ Checks to see if the char index is a '-'
@@ -144,122 +144,100 @@ operand1:  				@ Gets the operator1_A
     beq    getOperator
 
     cmp r4, #0x30    	@ Checks to see if the char index is a number lower bounds
-    blt    error_exit
+    blt    errorMsg1
 
     cmp    r4, #0x39    @ Checks to see if the char index is a number upper bounds
-    bgt    error_exit
+    bgt    errorMsg1
     
     strb r4, [r1]    	@ Stores the characters into the operand1_A variable
     add r1, r1, #1 		@ Increments byte location for operand1_A variable
     b operand1 
 
-getOperator:    @loop to figure out what the operator is  
+getOperator:    		@ Gets the operator
+    ldrb r4, [r0]     	
+    cmp r4, #'+'		@ Checks +
+    beq setOp 
+    	
+    cmp r4, #'-'		@ Checks -
+    beq setOp 
 
-    ldrb r4, [r0] 
-    cmp	r4,#0x2B    @checks value to see if it's +
-    beq store_op 
+    cmp r4, #'/' 		@ Checks /
+    beq setOp 
 
-    cmp r4, #0x2D    @checks value to see if it's -
-    beq store_op 
+    cmp r4, #'*' 		@ Checks *
+    beq setOp 
 
-    cmp r4, #0x2F    @checks value to see if it's / 
-    beq store_op 
+    b errorMsg1 
 
-    cmp r4, #0x2A    @checks value to see if it's * 
-    beq store_op 
-
-    b error_exit 
-
-store_op:    @stores the operator into operator 
-
+setOp:    				@ Stores r4 into operator location r3
     strb r4, [r3] 
-    add r0, r0, #1    @looks at space 
-    
-    ldrb r4, [r0] 
-    cmp    r4, #0x20    @Checks to see if there's a space 
-    bne    error_exit
-    
-    add r0, r0, #1    @looks at next number 
-    
- 
+    add r0, r0, #2		@ Skips the space and goes to look at the next number 
 
-operand2:     @Loop for operand 2 
-
-    ldrb r4, [r0]    @loads the next number into register r4 
+operand2:     			@ Gets the operand2_A (almost the same steps as operand1_A)
+    ldrb r4, [r0]
     add r0, r0, #1
-    cmp r4, #0x2D    @checks to see if the number is negative
+    cmp r4, #0x2D
     beq sflag2 
 
-    cmp r4, #0xA    @checks to see if user pressed 'enter' 
-    beq convert 
+    cmp r4, #0xA    	@ Once reaches end of function then it converts operand1_A and operand2_A to hex values 
+    beq toHex 
 
-    cmp r4, #0x30    @checks to see if it's NOT a number 
-    beq error_exit 
+    cmp r4, #0x30
+    beq errorMsg1 
 
-    cmp r4, #0x39    @checks to see if it's NOT a number  
-    bgt    error_exit 
+    cmp r4, #0x39 
+    bgt    errorMsg1 
 
-    strb r4, [r2]    @stores address of 2nd number into register r2 
+    strb r4, [r2]
     add r2, r2, #1 
     b operand2
 
-convert:        @loop to convert ascii to hex 
-
+toHex:        				@ Converts ascii to hex 
     ldr r1, =operand1_A
     ldr r2, =operand1_H
-    ldr r3, =flag1       @loads the values of flag1 into r3    
-    bl A_to_H
-    
-    mov r10, r8         
-    
+    ldr r3, =flag1       	@ So it knows if operand1_A is negative
+    bl A_to_H 
+    mov r10, r8         	@ Stores total number in r10
     
     ldr r1, =operand2_A 
     ldr r2, =operand2_H
-    ldr r3, =flag2       @loads the values of flag2 into r3  
+    ldr r3, =flag2       	@ So it knows if operand2_A is negative  
     bl A_to_H
-    
-    mov r9, r8         
+    mov r9, r8         		@ Stores total number in r9
 	
-    b sizecheck 
+    b checkSize 
     
-op: 
-
-	
+logicOp1:					@ Performs logic on operand1 (stored in r8) to check if negative
 	ldr r2, =flag1 
     ldrb r8, [r2] 
-    cmp r8,    #1    @checks if op1 is a negative number
-    bne sec
+    cmp r8, #1
+    bne logicOp2
     
-    mvn r10,r10		 @if op1 is negative make 2's compliment
+    mvn r10,r10		 		@ Op1 is negative then twos complement
     add r10, r10,#1
     
-      
-sec:  
-  
-	ldr r6, =flag2
+logicOp2:  
+	ldr r6, =flag2			@ Same concept as logicOp1 but for operand2
 	ldrb r8, [r6] 
-	cmp r8,    #1  @checks if op2 is a negative number
+	cmp r8, #1
+    bne arithmetic
     
-    bne contop
-    
-    mvn r9,r9		@if op1 is negative make 2's compliment
+    mvn r9, r9
     add r9, r9, #1
-    
-    //--------------//
 	
-contop:    
-	ldr r3, =operator         @Load address of operator  
-    ldrb r3, [r3]        @Loads value of operator into Opr
-    cmp r3, #0x2B        @checks if operator +   
+arithmetic:    
+	ldr r3, =operator      	@ Loads address of operator  
+    ldrb r3, [r3]        	@ Loads value of operator into operator
+    cmp r3, #0x2B        	@ Checks for +   
     beq add 
    
-    cmp r3, #0x2D        @checks if operator - 
+    cmp r3, #0x2D        	@ Checks for - 
     beq subtract 
 
-    cmp r3, #0x2A        @checks if operator *
+    cmp r3, #0x2A        	@ Checks for *
     beq multiply 
 
-    cmp r3, #0x2F        @checks if operator /
+    cmp r3, #0x2F        	@ Checks for /
     beq divide
 
 add: 
@@ -349,7 +327,7 @@ calc:
     b neg1_check     
 
    
-sizecheck: 
+checkSize: 
   
     cmp r9, #127
     bgt errorcheck 
@@ -363,7 +341,7 @@ sizecheck:
     cmp r10, #-128
     blt errorcheck 
              
-    b op 
+    b logicOp1 
   
 errorcheck: 
   
@@ -382,7 +360,7 @@ sflag2:
     b operand2 
     
  
-error_exit: 
+errorMsg1: 
 
     display errorFormat, 93        @displays error message if input is typed wrong
     b exit      
