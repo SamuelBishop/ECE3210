@@ -88,40 +88,40 @@ finished:
 // r1 - addrees of a ASCII value variable
 
 H_to_A:
-        push    {r1, r2, r3, r5, r6, r7, r8, r9, lr}
-		ldr	r8, [r0]
-		mov		r9,	r1
+	push    {r1, r2, r3, r5, r6, r7, r8, r9, lr}
+	ldr	r8, [r0]
+	mov		r9,	r1
 		
-        @ Initialization for hex to ascii
-        mov     r1, r8      @ dividend
-        mov     r2, #10     @ divisor
-        mov     r5, #0      @ counter
+    @ Initialization for hex to ascii
+    mov     r1, r8      	@ dividend
+    mov     r2, #10     	@ divisor
+    mov     r5, #0      	@ counter
 
-        @ Start conversion with dividing by 10
+    @ Start conversion with dividing by 10
 next_digit:
-		udiv	r3, r1, r2
-		mul		r7, r3, r2
-		sub		r1, r1, r7
+	udiv	r3, r1, r2
+	mul		r7, r3, r2
+	sub		r1, r1, r7
 
-        add     r1, r1, #0x30   @ increment by 0x30 to get the ascii value
-        push    {r1}            @ push the converted value into the stack
-        add     r5, r5, #1      @ increment the counter
-        mov     r1, r3          @ update the dividend
-        cmp     r3, #0          @ check whether the conversion is finished
-        bne     next_digit 
+    add     r1, r1, #0x30   @ increment by 0x30 to get the ascii value
+    push    {r1}            @ push the converted value into the stack
+    add     r5, r5, #1      @ increment the counter
+    mov     r1, r3          @ update the dividend
+    cmp     r3, #0          @ check whether the conversion is finished
+    bne     next_digit 
 
-        @ Store the converted value into memory
-        mov     r6, r9	
+    @ Store the converted value into memory
+    mov     r6, r9	
 store_asci:
-        pop     {r1}            @ pop each digit from the stack
-        strb    r1, [r6]        @ store the digit into memory
-        add     r6, r6, #1      @ increment the address
-        sub     r5, r5, #1      @ decrement the counter
-        cmp     r5, #0
-        bne     store_asci
+    pop     {r1}            @ pop each digit from the stack
+    strb    r1, [r6]        @ store the digit into memory
+    add     r6, r6, #1      @ increment the address
+    sub     r5, r5, #1      @ decrement the counter
+    cmp     r5, #0
+    bne     store_asci
 
-        pop     {r1, r2, r3, r5, r6, r7, r8, r9, lr}
-        bx      lr
+    pop     {r1, r2, r3, r5, r6, r7, r8, r9, lr}
+    bx      lr
 //========================================//
 
 
@@ -311,116 +311,96 @@ copys: 						@ Makes a negative copy of the result
     ldr r1, =result_A
 
     add r3, r3, #1 			@ Adding 1 to r3
-    b neg1_check     
-
+    b op1NegCheck     
    
 checkSize: 
-  
-    cmp r9, #127
-    bgt errorcheck 
+    cmp r9, #127			@ Self explainatory error checking
+    bgt sizeError 
                      
     cmp r9, #-128
-    blt errorcheck 
+    blt sizeError 
     
     cmp r10, #127
-    bgt errorcheck 
+    bgt sizeError 
                      
     cmp r10, #-128
-    blt errorcheck 
+    blt sizeError 
              
     b logicOp1 
   
-errorcheck: 
-  
-    display errorRange, 49        @displays error if numbers are out of range
-    display newLine, 1 
+sizeError: 
+    display errorRange, 49    	@ Displays out of range error
+    display newLine, 1
     b exit
      
-sflag1: 
-  
-    setflag    flag1        @if the 1st number is negative set flag to 1
+sflag1:
+    setflag flag1        		@ Operand1's negative flag
     b operand1 
        
 sflag2: 
-    
-    setflag    flag2        @if 2nd number is negative set flag to 1
+    setflag flag2        		@ Operand2's negative flag
     b operand2 
-    
  
 errorMsg1: 
+    display errorFormat, 93     @ Occurs if there is a formatting error
+    b exit
 
-    display errorFormat, 93        @displays error message if input is typed wrong
-    b exit      
-
-neg1_check: 
-         
+op1NegCheck: 					@ Checks if operand1 is negative and prints the correct result respectively
     display message2, 11     
     ldr r2, =flag1 
     ldrb r8, [r2] 
     cmp r8, #1 
-    beq neg1_print 
+    beq op1NegPrint 
 
-    b print_1 
+    b printOp1 					@ If it isn't it just prints the regular one
 
-neg1_print: 
-
-        display negative, 1 
-        b print_1 
+op1NegPrint: 					@ Only adds a - infront of number
+    display negative, 1
+    b printOp1
         
-print_1: 
+printOp1: 						@ Prints out operand1
+    display operand1_A, 3 
+    b disOperator     
 
-        display operand1_A, 3        @prints out the first number 
-        b disOperator     
+disOperator: 					@ Displays the operator
+    display message4, 12 
+    display operator, 1 
+    b op2NegCheck
 
-disOperator: 
-
-        display message4, 12 
-        display operator, 1            @prints out their operator 
-        b neg2_check 
-
-neg2_check:     
-
-        ldr r6, =flag2 
-        ldrb r8, [r6] 
-        display message3, 12 
-        cmp r8, #1 
-        beq neg2_print 
+op2NegCheck:     				@ Same concept as the first go around
+    ldr r6, =flag2 
+    ldrb r8, [r6] 
+    display message3, 12 
+    cmp r8, #1 
+    beq op2NegPrint 
         
-        b print_2 
+    b printOp2 
 
-neg2_print: 
+op2NegPrint: 
+    display negative,1 
+    b printOp2
 
-        display negative,1 
-        b print_2 
-
-print_2:
- 
-        display operand2_A, 3        @prints out the second number 
+printOp2:
+    display operand2_A, 3 
    
-displays:                        @prints out the calculated result 
-
-        display message5, 12 
-        
-        ldr r10, =flag3
-        ldrb r10, [r10]
-        cmp r10, #0
-        bne negativeresult 
-
-        b print_result 
+//////// FINALLY SHOWING THE RESULT ////////
+display message5, 12 			@ Result message
+ldr r10, =flag3
+ldrb r10, [r10]
+cmp r10, #0
+bne insertMinus					@ If answer is negative print a minus
+b printResult 					@ Print result
             
-negativeresult:            
-
+insertMinus:            
         display negative, 1 
    
-print_result: 
-
-        display result_A, 10        @prints out the calculated result
+printResult: 
+        display result_A, 10
         display newLine,1 
 
         b exit                              
           
 exit: 
-	
 		@ exit system call
-		mov		r7, #1
+		mov r7, #1
 		swi 0
