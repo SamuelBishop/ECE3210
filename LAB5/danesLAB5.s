@@ -126,50 +126,49 @@ store_asci:
 
 
 main:
-		display  message1, 33 	@ Displaying input prompt and obtaining user input
+		display message1, 33 	@ Displaying input prompt and obtaining user input
         input input, 20  
 
-        ldr r0, =input
+        ldr r0, =input			@ Loading variable addresses
         ldr r1, =operand1_A
         ldr r2, =operand2_A 
         ldr r3, =operator 
 		
-operand1:  
-	
-    ldrb r4, [r0]    	@ loads the string into r4 
-    add r0, r0, #1    	@ points at the next number 
-    cmp r4, #'-'    	@ check to see if the first number is negative
-    BEQ    sflag1 		@ if op1 is negative, set flag to 1 
+operand1:  				@ Gets the operator1_A
+    ldrb r4, [r0]    	@ Loads the first char of string into r4 
+    add r0, r0, #1    	@ Changes pointer by 1
+    cmp r4, #'-'    	@ Checks to see if the char index is a '-'
+    beq    sflag1 		@ If char is '-' sets the negative op1 flag to true
  
-    cmp r4, #0x20    	@ Checks to see if there's a space 
-    BEQ    loopop 
+    cmp r4, #0x20    	@ Checks to see if the char index is a ' '. If so then next step.
+    beq    getOperator
 
-    cmp r4, #0x30    	@ checks to see if there's a number 
-    BLT    error_exit 
+    cmp r4, #0x30    	@ Checks to see if the char index is a number lower bounds
+    blt    error_exit
 
-    cmp    r4, #0x39    @ checks to see if there's a number 
-    BGT    error_exit 
+    cmp    r4, #0x39    @ Checks to see if the char index is a number upper bounds
+    bgt    error_exit
     
-    strb r4, [r1]    	@ stores the address of 1st number (r1)
-    add r1, r1, #1 
-    B operand1 
+    strb r4, [r1]    	@ Stores the characters into the operand1_A variable
+    add r1, r1, #1 		@ Increments byte location for operand1_A variable
+    b operand1 
 
-loopop:    @loop to figure out what the operator is  
+getOperator:    @loop to figure out what the operator is  
 
     ldrb r4, [r0] 
     cmp	r4,#0x2B    @checks value to see if it's +
-    BEQ store_op 
+    beq store_op 
 
     cmp r4, #0x2D    @checks value to see if it's -
-    BEQ store_op 
+    beq store_op 
 
     cmp r4, #0x2F    @checks value to see if it's / 
-    BEQ store_op 
+    beq store_op 
 
     cmp r4, #0x2A    @checks value to see if it's * 
-    BEQ store_op 
+    beq store_op 
 
-    B error_exit 
+    b error_exit 
 
 store_op:    @stores the operator into operator 
 
@@ -178,7 +177,7 @@ store_op:    @stores the operator into operator
     
     ldrb r4, [r0] 
     cmp    r4, #0x20    @Checks to see if there's a space 
-    BNE    error_exit
+    bne    error_exit
     
     add r0, r0, #1    @looks at next number 
     
@@ -189,20 +188,20 @@ operand2:     @Loop for operand 2
     ldrb r4, [r0]    @loads the next number into register r4 
     add r0, r0, #1
     cmp r4, #0x2D    @checks to see if the number is negative
-    BEQ sflag2 
+    beq sflag2 
 
     cmp r4, #0xA    @checks to see if user pressed 'enter' 
-    BEQ convert 
+    beq convert 
 
     cmp r4, #0x30    @checks to see if it's NOT a number 
-    BLT error_exit 
+    beq error_exit 
 
     cmp r4, #0x39    @checks to see if it's NOT a number  
-    BGT    error_exit 
+    bgt    error_exit 
 
     strb r4, [r2]    @stores address of 2nd number into register r2 
     add r2, r2, #1 
-    B operand2
+    b operand2
 
 convert:        @loop to convert ascii to hex 
 
@@ -221,7 +220,7 @@ convert:        @loop to convert ascii to hex
     
     mov r9, r8         
 	
-    B sizecheck 
+    b sizecheck 
     
 op: 
 
@@ -252,16 +251,16 @@ contop:
 	ldr r3, =operator         @Load address of operator  
     ldrb r3, [r3]        @Loads value of operator into Opr
     cmp r3, #0x2B        @checks if operator +   
-    BEQ add 
+    beq add 
    
     cmp r3, #0x2D        @checks if operator - 
-    BEQ subtract 
+    beq subtract 
 
     cmp r3, #0x2A        @checks if operator *
-    BEQ multiply 
+    beq multiply 
 
     cmp r3, #0x2F        @checks if operator /
-    BEQ divide
+    beq divide
 
 add: 
 
@@ -353,18 +352,18 @@ calc:
 sizecheck: 
   
     cmp r9, #127
-    BGT errorcheck 
+    bgt errorcheck 
                      
     cmp r9, #-128
-    BLT errorcheck 
+    blt errorcheck 
     
     cmp r10, #127
-    BGT errorcheck 
+    bgt errorcheck 
                      
     cmp r10, #-128
-    BLT errorcheck 
+    blt errorcheck 
              
-    B op 
+    b op 
   
 errorcheck: 
   
@@ -394,7 +393,7 @@ neg1_check:
     ldr r2, =flag1 
     ldrb r8, [r2] 
     cmp r8,    #1 
-    BEQ neg1_print 
+    beq neg1_print 
 
     b print_1 
 
@@ -420,7 +419,7 @@ neg2_check:
         ldrb r8, [r6] 
         display message3, 12 
         cmp r8, #1 
-        BEQ neg2_print 
+        beq neg2_print 
         
         b print_2 
 
@@ -440,7 +439,7 @@ displays:                        @prints out the calculated result
         ldr r10, =flag3
         ldrb r10, [r10]
         cmp r10, #0
-        BNE negativeresult 
+        bne negativeresult 
 
         b print_result 
             
