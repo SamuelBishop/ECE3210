@@ -76,6 +76,9 @@ loop:
     add r8, r8, r0 			@ Adds all the numbers up to get the final result
     b loop
     
+    mvn r8, r8 
+    add r8, r8, #1
+    
 finished:
 	strb r8, [r2]			@ Store the result into operand1_H
     pop {r4, lr}
@@ -183,7 +186,7 @@ operand2:     			@ Gets the operand2_A (almost the same steps as operand1_A)
     beq toHex 
 
     cmp r4, #0x30
-    beq errorMsg1 
+    blt errorMsg1 
 
     cmp r4, #0x39 
     bgt    errorMsg1 
@@ -314,16 +317,16 @@ copys: 						@ Makes a negative copy of the result
     b op1NegCheck     
    
 checkSize: 
-    cmp r9, #127			@ Self explainatory error checking
+    cmp r9, #0x7f			@ Self explainatory error checking
     bgt sizeError 
                      
-    cmp r9, #-128
+    cmp r9, #-0x80
     blt sizeError 
     
-    cmp r10, #127
+    cmp r10, #0x7f
     bgt sizeError 
                      
-    cmp r10, #-128
+    cmp r10, #-0x80
     blt sizeError 
              
     b logicOp1 
