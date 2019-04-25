@@ -317,16 +317,16 @@ copys: 						@ Makes a negative copy of the result
     b op1NegCheck     
    
 checkSize: 
-    cmp r9, #0x7f			@ Self explainatory error checking
+    cmp r9, #0xFF			@ Self explainatory error checking
     bgt sizeError 
                      
-    cmp r9, #-0x80
+    cmp r9, #-0xFF
     blt sizeError 
     
-    cmp r10, #0x7f
+    cmp r10, #0xFF
     bgt sizeError 
                      
-    cmp r10, #-0x80
+    cmp r10, #-0xFF
     blt sizeError 
              
     b logicOp1 
