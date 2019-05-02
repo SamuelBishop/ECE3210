@@ -75,22 +75,22 @@ memMsg:
 @ time: immediate value
 @ reg: register 
 
-	push	{r4,r5,r6,r7,r8,r9,lr}
-	ldr r1, =#1000
-	ldr r2, =\time
+	push	{r4,r5,r6,r7,r8,r9,lr}		@ Push all important registers onto the stack
+	ldr r1, =#1000						@ Set r1 equal to 1000
+	ldr r2, =\time						@ Set r2 equal to the time variable that we specified
 	
-	mov r3, \reg  //system timer
-	add r3, r3, #4 //system counter
-	mul r5, r2, r1
-	ldr r6, [r3] //time stored in r6
+	mov r3, \reg  						@ system timer
+	add r3, r3, #4 						@ system counter
+	mul r5, r2, r1						@ Set r5 to r2 * time
+	ldr r6, [r3] 						@ time stored in r6 put into r3
 
 0:
-	ldr r7, [r3]
-	sub r9, r7, r6
-	cmp r9, r5
-	BLT 0b
+	ldr r7, [r3]						@ Use the timer value in r7
+	sub r9, r7, r6						@ Subtract initial time from final time
+	cmp r9, r5							@ Compare with r1
+	BLT 0
 	
-    pop	    {r4,r5,r6,r7,r8,r9, lr}
+    pop	    {r4,r5,r6,r7,r8,r9, lr}		@ Put all of the important stuff back onto the stack
 
 .endm
 
@@ -147,22 +147,22 @@ main:
 @ Register R5 contains the base address for GPIO
 @ Register R6 contains the base address for system timer
 
-	ldr r7, =number_print
-	ldrb r0, [r7]
+	ldr r7, =number_print	@ Loads the address to number to print variable
+	ldrb r0, [r7]			@ Loads the number to print variable
 	
 repin:
-	cmp r0, #0x39
+	cmp r0, #0x39			@ Compares with the ascii value of 9
 	BGT end
 	
-	print message,12
-	print number_print, 1
-	print newline, 1
+	print message,12		@ Prints Hello World
+	print number_print, 1	@ Prints the number increment
+	print newline, 1		@ Prints the new line
 	
-	timer r6, 1000
-	add r0, r0, #1
-	strb r0, [r7]
+	timer r6, 1000			@ Setting the timer to do 1000ms
+	add r0, r0, #1			@ Incrementing count
+	strb r0, [r7]			@ Storing count back into the memory address location
 	
-	B repin
+	B repin					
 	
 end: 
 

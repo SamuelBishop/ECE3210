@@ -104,17 +104,17 @@ main:
 @ ======================================================================
 @ Register R5 contains the base address for your GPIO registers
 
-mov r0, r5
-ldr r2, [r0]
-bic r2, r2, #0b111<<(3*4)
-orr r2, r2,#0b001<<(3*4)
+mov r0, r5					@ Move the address into r0
+ldr r2, [r0]				@ Load the address into r2
+bic r2, r2, #0b111<<(3*4)	@ Clears all bits that would be used
+orr r2, r2,#0b001<<(3*4)	@ Set pin 4 to output
 str r2,[r0]
 
-add r0, r0, #28
+add r0, r0, #28				@ Shifts up 28 spots
 ldr r2, [r0]
-bic r2, r0, #0b111111
-orr r2, r2, #0b010000
-str r2, [r0]
+bic r2, r0, #0b111111		@ Clears all the spots from 28-34
+orr r2, r2, #0b010000		@ Sets spot 5 to 1
+str r2, [r0]				@ Stores back into the address
 
 	
 @ ======================================================================

@@ -105,22 +105,22 @@ main:
 @ Register R5 contains the base address for your GPIO registers
 
 mov r0, r5
-ldr r2, [r0]
+ldr r2, [r0]					@ This is GPIO select
 bic r2, r2, #0b111<<(3*2)
-orr r2, r2,#0b001<<(3*2)
-bic r2, r2, #0b111<<(3*3)
-orr r2, r2,#0b001<<(3*3)
+orr r2, r2,#0b001<<(3*2)		@ Setting the pin as output
+bic r2, r2, #0b111<<(3*3)		@ Did the same with all other leds
+orr r2, r2,#0b001<<(3*3)		
 bic r2, r2, #0b111<<(3*4)
 orr r2, r2,#0b001<<(3*4)
 bic r2, r2, #0b111<<(3*5)
 orr r2, r2,#0b001<<(3*5)
-str r2,[r0]
+str r2,[r0]						@ Moving all of the memory addresses into virtual memory
 
-add r0, r0, #40
-ldr r2, [r0]
+add r0, r0, #40					@ Shifting the memory address up 40
+ldr r2, [r0]					@ Loads a GPIO select with the pins offset
 mov r3, #1111
-orr r2, r2, r3,lsl #2
-str r2, [r0]
+orr r2, r2, r3,lsl #2			@ Now contains 111-100
+str r2, [r0]					@ Make this new pattern the GPIO select
 	
 @ ======================================================================
 @ =================== The END of your Implementation =+=================

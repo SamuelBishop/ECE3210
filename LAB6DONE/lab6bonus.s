@@ -75,22 +75,22 @@ memMsg:
 @ time: immediate value
 @ reg: register 
 
-	push	{r4,r5,r6,r7,r8,r9,lr}
-	ldr r1, =#1000
-	ldr r2, =\time
+	push	{r4,r5,r6,r7,r8,r9,lr}		@ Push all important registers onto the stack
+	ldr r1, =#1000						@ Set r1 equal to 1000
+	ldr r2, =\time						@ Set r2 equal to the time variable that we specified
 	
-	mov r3, \reg  //system timer
-	add r3, r3, #4 //system counter
-	mul r5, r2, r1
-	ldr r6, [r3] //time stored in r6
+	mov r3, \reg  						@ system timer
+	add r3, r3, #4 						@ system counter
+	mul r5, r2, r1						@ Set r5 to r2 * time
+	ldr r6, [r3] 						@ time stored in r6 put into r3
 
 0:
-	ldr r7, [r3]
-	sub r9, r7, r6
-	cmp r9, r5
-	BLT 0b
+	ldr r7, [r3]						@ Use the timer value in r7
+	sub r9, r7, r6						@ Subtract initial time from final time
+	cmp r9, r5							@ Compare with r1
+	BLT 0
 	
-    pop	    {r4,r5,r6,r7,r8,r9, lr}
+    pop	    {r4,r5,r6,r7,r8,r9, lr}		@ Put all of the important stuff back onto the stack
 
 .endm
 
